@@ -1,0 +1,79 @@
+{
+  "@@locale": "sw",
+  
+  "appName": "Pendo",
+
+  "welcomeMessage": "Pata mchumba wako",
+
+  "loginTitle": "Ingia",
+  "registerTitle": "Jisajili",
+  "email": "Barua pepe",
+  "password": "Nywila",
+  "name": "Jina",
+  "age": "Umri",
+  "bio": "Maelezo",
+  "interests": "Maslahi",
+  "location": "Mahali",
+
+  "matchingTabTitle": "Tafuta",
+  "chatTabTitle": "Ujumbe",
+  "tribesTabTitle": "Makabila",
+  "profileTabTitle": "Wasifu",
+
+  "noMoreProfiles": "Hakuna wasifu zaidi",
+  "refreshProfiles": "Vuta kurejesha",
+
+  "itsAMatch": "Mmependana!",
+  "matchDescription": "Wewe na {name} mmependana",
+  "sendMessage": "Tuma ujumbe",
+  "keepSwiping": "Endelea kutafuta",
+
+  "noMessages": "Hakuna ujumbe",
+  "startChatting": "Anza kuongea na watu uliopenda",
+  "typeMessage": "Andika ujumbe...",
+  "sendingImage": "Inatuma picha...",
+
+  "createTribe": "Unda kabila",
+  "joinTribe": "Jiunge",
+  "leaveTribe": "Ondoka",
+  "tribeName": "Jina la kabila",
+  "tribeDescription": "Maelezo",
+  "tribeMembers": "Wanachama {count}",
+
+  "createEvent": "Unda tukio",
+  "joinEvent": "Jiunge",
+  "leaveEvent": "Ondoka",
+  "eventTitle": "Jina la tukio",
+  "eventDescription": "Maelezo ya tukio",
+  "eventDate": "Tarehe",
+  "eventTime": "Wakati",
+  "eventLocation": "Mahali",
+  "attendees": "Washiriki {count}",
+
+  "createVote": "Unda kura",
+  "castVote": "Piga kura",
+  "voteTitle": "Jina la kura",
+  "voteDescription": "Maelezo ya kura",
+  "voteOptions": "Chaguo",
+  "voteEndsIn": "Inakwisha baada ya siku {days}",
+
+  "errorTitle": "Hitilafu",
+  "networkError": "Hitilafu ya mtandao",
+  "unexpectedError": "Hitilafu isiyotarajiwa",
+  "tryAgain": "Jaribu tena",
+
+  "settings": "Mipangilio",
+  "editProfile": "Hariri wasifu",
+  "notifications": "Arifa",
+  "privacy": "Faragha",
+  "language": "Lugha",
+  "theme": "Mandhari",
+  "about": "Kuhusu",
+  "logout": "Toka",
+
+  "cancel": "Ghairi",
+  "save": "Hifadhi",
+  "delete": "Futa",
+  "confirm": "Thibitisha",
+  "loading": "Inapakia..."
+}

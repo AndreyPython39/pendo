@@ -1,0 +1,113 @@
+{
+  "@@locale": "en",
+  
+  "appName": "Pendo",
+  "@appName": {
+    "description": "The name of the application"
+  },
+
+  "welcomeMessage": "Find your perfect match",
+  "@welcomeMessage": {
+    "description": "Welcome message on the home screen"
+  },
+
+  "loginTitle": "Login",
+  "registerTitle": "Register",
+  "email": "Email",
+  "password": "Password",
+  "name": "Name",
+  "age": "Age",
+  "bio": "Bio",
+  "interests": "Interests",
+  "location": "Location",
+
+  "matchingTabTitle": "Discover",
+  "chatTabTitle": "Messages",
+  "tribesTabTitle": "Tribes",
+  "profileTabTitle": "Profile",
+
+  "noMoreProfiles": "No more profiles to show",
+  "refreshProfiles": "Pull to refresh",
+
+  "itsAMatch": "It's a Match!",
+  "matchDescription": "You and {name} have liked each other",
+  "@matchDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sendMessage": "Send Message",
+  "keepSwiping": "Keep Swiping",
+
+  "noMessages": "No messages yet",
+  "startChatting": "Start chatting with your matches",
+  "typeMessage": "Type a message...",
+  "sendingImage": "Sending image...",
+
+  "createTribe": "Create Tribe",
+  "joinTribe": "Join Tribe",
+  "leaveTribe": "Leave Tribe",
+  "tribeName": "Tribe Name",
+  "tribeDescription": "Description",
+  "tribeMembers": "{count} members",
+  "@tribeMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "createEvent": "Create Event",
+  "joinEvent": "Join Event",
+  "leaveEvent": "Leave Event",
+  "eventTitle": "Event Title",
+  "eventDescription": "Event Description",
+  "eventDate": "Date",
+  "eventTime": "Time",
+  "eventLocation": "Location",
+  "attendees": "{count} attending",
+  "@attendees": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "createVote": "Create Vote",
+  "castVote": "Cast Vote",
+  "voteTitle": "Vote Title",
+  "voteDescription": "Vote Description",
+  "voteOptions": "Options",
+  "voteEndsIn": "Ends in {days} days",
+  "@voteEndsIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+
+  "errorTitle": "Error",
+  "networkError": "Network error occurred",
+  "unexpectedError": "An unexpected error occurred",
+  "tryAgain": "Try Again",
+
+  "settings": "Settings",
+  "editProfile": "Edit Profile",
+  "notifications": "Notifications",
+  "privacy": "Privacy",
+  "language": "Language",
+  "theme": "Theme",
+  "about": "About",
+  "logout": "Logout",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "loading": "Loading..."
+}

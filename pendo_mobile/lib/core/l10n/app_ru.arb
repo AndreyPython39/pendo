@@ -1,0 +1,79 @@
+{
+  "@@locale": "ru",
+  
+  "appName": "Pendo",
+
+  "welcomeMessage": "Найди свою идеальную пару",
+
+  "loginTitle": "Вход",
+  "registerTitle": "Регистрация",
+  "email": "Email",
+  "password": "Пароль",
+  "name": "Имя",
+  "age": "Возраст",
+  "bio": "О себе",
+  "interests": "Интересы",
+  "location": "Местоположение",
+
+  "matchingTabTitle": "Поиск",
+  "chatTabTitle": "Сообщения",
+  "tribesTabTitle": "Племена",
+  "profileTabTitle": "Профиль",
+
+  "noMoreProfiles": "Больше нет анкет",
+  "refreshProfiles": "Потяните, чтобы обновить",
+
+  "itsAMatch": "Это взаимно!",
+  "matchDescription": "Вы и {name} понравились друг другу",
+  "sendMessage": "Написать сообщение",
+  "keepSwiping": "Продолжить поиск",
+
+  "noMessages": "Нет сообщений",
+  "startChatting": "Начните общаться с теми, кто вам понравился",
+  "typeMessage": "Введите сообщение...",
+  "sendingImage": "Отправка изображения...",
+
+  "createTribe": "Создать племя",
+  "joinTribe": "Присоединиться",
+  "leaveTribe": "Покинуть племя",
+  "tribeName": "Название племени",
+  "tribeDescription": "Описание",
+  "tribeMembers": "{count} участников",
+
+  "createEvent": "Создать событие",
+  "joinEvent": "Участвовать",
+  "leaveEvent": "Отказаться",
+  "eventTitle": "Название события",
+  "eventDescription": "Описание события",
+  "eventDate": "Дата",
+  "eventTime": "Время",
+  "eventLocation": "Место",
+  "attendees": "Участников: {count}",
+
+  "createVote": "Создать голосование",
+  "castVote": "Проголосовать",
+  "voteTitle": "Название голосования",
+  "voteDescription": "Описание голосования",
+  "voteOptions": "Варианты",
+  "voteEndsIn": "Осталось {days} дней",
+
+  "errorTitle": "Ошибка",
+  "networkError": "Ошибка сети",
+  "unexpectedError": "Произошла неожиданная ошибка",
+  "tryAgain": "Повторить",
+
+  "settings": "Настройки",
+  "editProfile": "Редактировать профиль",
+  "notifications": "Уведомления",
+  "privacy": "Конфиденциальность",
+  "language": "Язык",
+  "theme": "Тема",
+  "about": "О приложении",
+  "logout": "Выйти",
+
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "delete": "Удалить",
+  "confirm": "Подтвердить",
+  "loading": "Загрузка..."
+}

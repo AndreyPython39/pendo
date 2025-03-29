@@ -1,0 +1,79 @@
+{
+  "@@locale": "zu",
+  
+  "appName": "Pendo",
+
+  "welcomeMessage": "Thola umlingani wakho",
+
+  "loginTitle": "Ngena",
+  "registerTitle": "Bhalisa",
+  "email": "I-imeyili",
+  "password": "Iphasiwedi",
+  "name": "Igama",
+  "age": "Iminyaka",
+  "bio": "Ngami",
+  "interests": "Izintshisekelo",
+  "location": "Indawo",
+
+  "matchingTabTitle": "Thola",
+  "chatTabTitle": "Imiyalezo",
+  "tribesTabTitle": "Izizwe",
+  "profileTabTitle": "Iphrofayela",
+
+  "noMoreProfiles": "Ayikho eminye imiphrofayela",
+  "refreshProfiles": "Donsa ukuvuselela",
+
+  "itsAMatch": "Niyathandana!",
+  "matchDescription": "Wena no-{name} niyathandana",
+  "sendMessage": "Thumela umyalezo",
+  "keepSwiping": "Qhubeka uthola",
+
+  "noMessages": "Ayikho imiyalezo",
+  "startChatting": "Qala uxoxe nalabo obathandile",
+  "typeMessage": "Bhala umyalezo...",
+  "sendingImage": "Ithumela isithombe...",
+
+  "createTribe": "Dala isizwe",
+  "joinTribe": "Joyina",
+  "leaveTribe": "Phuma",
+  "tribeName": "Igama lesizwe",
+  "tribeDescription": "Incazelo",
+  "tribeMembers": "Amalungu {count}",
+
+  "createEvent": "Dala umcimbi",
+  "joinEvent": "Joyina",
+  "leaveEvent": "Phuma",
+  "eventTitle": "Igama lomcimbi",
+  "eventDescription": "Incazelo yomcimbi",
+  "eventDate": "Usuku",
+  "eventTime": "Isikhathi",
+  "eventLocation": "Indawo",
+  "attendees": "Abakhona {count}",
+
+  "createVote": "Dala ivoti",
+  "castVote": "Vota",
+  "voteTitle": "Igama levoti",
+  "voteDescription": "Incazelo yevoti",
+  "voteOptions": "Izinketho",
+  "voteEndsIn": "Iphela emva kwezinsuku {days}",
+
+  "errorTitle": "Iphutha",
+  "networkError": "Iphutha lenethiwekhi",
+  "unexpectedError": "Kwenzeke iphutha elingalindelekile",
+  "tryAgain": "Zama futhi",
+
+  "settings": "Izilungiselelo",
+  "editProfile": "Hlela iphrofayela",
+  "notifications": "Izaziso",
+  "privacy": "Ubumfihlo",
+  "language": "Ulimi",
+  "theme": "Itimu",
+  "about": "Mayelana",
+  "logout": "Phuma",
+
+  "cancel": "Khansela",
+  "save": "Londoloza",
+  "delete": "Susa",
+  "confirm": "Qinisekisa",
+  "loading": "Iyalayisha..."
+}

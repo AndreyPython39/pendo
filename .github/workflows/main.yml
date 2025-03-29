@@ -1,0 +1,191 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:13-3.1
+        env:
+          POSTGRES_USER: pendo
+          POSTGRES_PASSWORD: pendopass
+          POSTGRES_DB: pendo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:6-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run linters
+      run: |
+        pip install black isort mypy flake8 bandit
+        black . --check
+        isort . --check-only
+        mypy .
+        flake8 .
+        bandit -r .
+
+    - name: Run tests
+      env:
+        POSTGRES_SERVER: localhost
+        POSTGRES_USER: pendo
+        POSTGRES_PASSWORD: pendopass
+        POSTGRES_DB: pendo_test
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        pytest --cov=app --cov-report=xml
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+
+  flutter-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.13.0'
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: |
+        cd pendo_mobile
+        flutter pub get
+
+    - name: Run linter
+      run: |
+        cd pendo_mobile
+        flutter analyze
+
+    - name: Run tests
+      run: |
+        cd pendo_mobile
+        flutter test --coverage
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: pendo_mobile/coverage/lcov.info
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run Snyk
+      uses: snyk/actions/python@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+    - name: Run OWASP ZAP Scan
+      uses: zaproxy/action-full-scan@v0.4.0
+      with:
+        target: 'http://localhost:8000'
+
+  build-deploy:
+    needs: [test, flutter-test, security-scan]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push API image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: pendo-api
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.13.0'
+        channel: 'stable'
+
+    - name: Build Android App
+      run: |
+        cd pendo_mobile
+        flutter build appbundle
+
+    - name: Upload Android App
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-release
+        path: pendo_mobile/build/app/outputs/bundle/release/app-release.aab
+
+    - name: Build iOS App
+      run: |
+        cd pendo_mobile
+        flutter build ios --release --no-codesign
+
+    - name: Upload iOS App
+      uses: actions/upload-artifact@v3
+      with:
+        name: ios-release
+        path: pendo_mobile/build/ios/iphoneos
+
+    - name: Deploy to EKS
+      run: |
+        aws eks update-kubeconfig --name pendo-cluster --region ${{ secrets.AWS_REGION }}
+        kubectl set image deployment/pendo-api pendo-api=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()

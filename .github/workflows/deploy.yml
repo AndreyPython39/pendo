@@ -1,0 +1,137 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: pendo
+  EKS_CLUSTER: pendo-cluster
+  KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and push API image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.13.0'
+        channel: 'stable'
+
+    - name: Build Android Release
+      run: |
+        cd pendo_mobile
+        flutter build appbundle \
+          --build-name=${{ github.ref_name }} \
+          --build-number=${{ github.run_number }}
+
+    - name: Sign Android Release
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: pendo_mobile/build/app/outputs/bundle/release
+        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+        alias: ${{ secrets.KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+    - name: Upload to Play Store
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        packageName: com.pendo.app
+        releaseFiles: pendo_mobile/build/app/outputs/bundle/release/app-release.aab
+        track: production
+        status: completed
+
+    - name: Build iOS Release
+      run: |
+        cd pendo_mobile
+        flutter build ios --release --no-codesign
+
+    - name: Upload to App Store
+      uses: apple-actions/upload-testflight@v1
+      with:
+        app-path: pendo_mobile/build/ios/iphoneos/Runner.app
+        api-key-id: ${{ secrets.APP_STORE_API_KEY_ID }}
+        api-key-issuer-id: ${{ secrets.APP_STORE_API_KEY_ISSUER_ID }}
+        api-key-content: ${{ secrets.APP_STORE_API_KEY_CONTENT }}
+
+    - name: Set up Kustomize
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+
+    - name: Deploy to EKS
+      run: |
+        echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        
+        # Update deployment image
+        cd k8s
+        kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        kustomize build . | kubectl apply -f -
+        
+        # Verify deployment
+        kubectl rollout status deployment/pendo-api -n pendo
+
+    - name: Run Database Migrations
+      run: |
+        export KUBECONFIG=kubeconfig
+        kubectl exec -n pendo deployment/pendo-api -- alembic upgrade head
+
+    - name: Verify Health Checks
+      run: |
+        export KUBECONFIG=kubeconfig
+        kubectl exec -n pendo deployment/pendo-api -- curl -f http://localhost:8000/health
+
+    - name: Create Sentry Release
+      uses: getsentry/action-release@v1
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        SENTRY_ORG: pendo
+        SENTRY_PROJECT: api
+      with:
+        environment: production
+        version: ${{ github.ref_name }}
+
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()
