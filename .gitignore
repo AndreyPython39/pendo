@@ -1,0 +1,50 @@
+# === Python / FastAPI ===
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/*.pyo
+
+# VSCode
+.vscode/
+.idea/
+*.swp
+
+# === Flutter ===
+build/
+.dart_tool/
+.flutter-plugins
+.packages
+.pub-cache/
+pubspec.lock
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+
+# === General ===
+*.DS_Store
+*.bak
+*.tmp
+*.old
+*.orig
+
+# System
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# === Logs & Temp ===
+*.log
+logs/
+tmp/
+.cache/
+
+# Node/npm (если что-то юзается)
+node_modules/
