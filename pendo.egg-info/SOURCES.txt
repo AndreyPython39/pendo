@@ -1,7 +1,0 @@
-README.md
-setup.py
-pendo.egg-info/PKG-INFO
-pendo.egg-info/SOURCES.txt
-pendo.egg-info/dependency_links.txt
-pendo.egg-info/requires.txt
-pendo.egg-info/top_level.txt

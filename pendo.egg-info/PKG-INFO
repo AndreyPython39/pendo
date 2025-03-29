@@ -1,8 +1,0 @@
-Metadata-Version: 2.2
-Name: pendo
-Version: 0.1
-Requires-Dist: fastapi
-Requires-Dist: uvicorn
-Requires-Dist: sqlalchemy
-Requires-Dist: alembic
-Dynamic: requires-dist
