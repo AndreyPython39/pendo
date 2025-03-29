@@ -3,7 +3,7 @@ import 'package:pendo_mobile/core/constants/api_constants.dart';
 import 'package:pendo_mobile/features/auth/data/models/auth_model.dart';
 import 'package:pendo_mobile/features/auth/data/models/user_model.dart';
 import 'package:pendo_mobile/features/auth/domain/repositories/auth_repository.dart';
-import 'package:shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final Dio _dio;
@@ -102,9 +102,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _dio.post(
         ApiConstants.refreshToken,
-        data: RefreshTokenRequestModel(
-          refreshToken: refreshToken,
-        ).toJson(),
+        data: {
+          'refresh_token': refreshToken,
+        },
       );
 
       final authResponse = AuthResponseModel.fromJson(response.data);
@@ -130,7 +130,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _dio.post(
         ApiConstants.forgotPassword,
-        data: {'email': email},
+        data: {
+          'email': email,
+        },
       );
     } catch (e) {
       throw _handleError(e);
@@ -147,7 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.resetPassword,
         data: {
           'token': token,
-          'password': newPassword,
+          'new_password': newPassword,
         },
       );
     } catch (e) {
@@ -158,7 +160,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserModel> getCurrentUser() async {
     try {
-      final response = await _dio.get(ApiConstants.profile);
+      final response = await _dio.get(ApiConstants.currentUser);
       return UserModel.fromJson(response.data);
     } catch (e) {
       throw _handleError(e);
@@ -169,8 +171,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> updateFcmToken(String token) async {
     try {
       await _dio.post(
-        '${ApiConstants.profile}/fcm-token',
-        data: {'token': token},
+        ApiConstants.updateFcmToken,
+        data: {
+          'token': token,
+        },
       );
     } catch (e) {
       throw _handleError(e);
@@ -183,35 +187,109 @@ class AuthRepositoryImpl implements AuthRepository {
     return token != null;
   }
 
+  @override
+  Future<void> updateLastActive() async {
+    try {
+      await _dio.post(ApiConstants.updateLastActive);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<void> setActive(bool isActive) async {
+    try {
+      await _dio.post(
+        ApiConstants.setActive,
+        data: {
+          'is_active': isActive,
+        },
+      );
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<List<GiftTransactionModel>> getGiftsSent({
+    int skip = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.giftsSent,
+        queryParameters: {
+          'skip': skip,
+          'limit': limit,
+        },
+      );
+      return (response.data as List)
+          .map((x) => GiftTransactionModel.fromJson(x))
+          .toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<List<GiftTransactionModel>> getGiftsReceived({
+    int skip = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.giftsReceived,
+        queryParameters: {
+          'skip': skip,
+          'limit': limit,
+        },
+      );
+      return (response.data as List)
+          .map((x) => GiftTransactionModel.fromJson(x))
+          .toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<List<LiveStreamModel>> getStreams({
+    int skip = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.streams,
+        queryParameters: {
+          'skip': skip,
+          'limit': limit,
+        },
+      );
+      return (response.data as List)
+          .map((x) => LiveStreamModel.fromJson(x))
+          .toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<void> _saveAuthData(AuthResponseModel auth) async {
     await _prefs.setString('access_token', auth.accessToken);
     await _prefs.setString('refresh_token', auth.refreshToken);
-    await _prefs.setInt('user_id', auth.user.id);
   }
 
   Future<void> _clearAuthData() async {
     await _prefs.remove('access_token');
     await _prefs.remove('refresh_token');
-    await _prefs.remove('user_id');
   }
 
   Exception _handleError(dynamic error) {
-    if (error is DioException) {
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return Exception('Connection timeout');
-      }
-
-      if (error.response?.statusCode == 401) {
-        return Exception('Invalid credentials');
-      }
-
-      if (error.response?.data != null &&
-          error.response?.data['message'] != null) {
+    if (error is DioError) {
+      if (error.response?.data != null) {
         return Exception(error.response?.data['message']);
       }
+      return Exception(error.message);
     }
-
-    return Exception('Something went wrong');
+    return Exception('An unexpected error occurred');
   }
 }
