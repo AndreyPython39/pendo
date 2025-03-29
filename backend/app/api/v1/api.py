@@ -12,7 +12,10 @@ from .endpoints import (
     events,
     gifts,
     premium,
-    streams
+    streams,
+    gifts,
+    premium,
+    events
 )
 
 api_router = APIRouter()
@@ -40,3 +43,6 @@ api_router.include_router(moderation.router, prefix="/moderation", tags=["modera
 
 # Utils
 api_router.include_router(icebreaker.router, prefix="/icebreaker", tags=["icebreaker"])
+api_router.include_router(gifts.router, prefix="/gifts", tags=["gifts"])
+api_router.include_router(premium.router, prefix="/premium", tags=["premium"])
+api_router.include_router(events.router, prefix="/events", tags=["events"])

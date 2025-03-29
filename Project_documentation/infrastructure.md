@@ -1,287 +1,175 @@
-# Infrastructure Documentation
+# Инфраструктура Pendo
 
-## Overview
-Complete infrastructure setup for the Pendo application, including development, staging, and production environments.
+## Компоненты системы
 
-## Components
+### 1. Backend (FastAPI)
+- REST API сервисы
+- WebSocket для real-time коммуникации
+- Celery для асинхронных задач
+- Rate limiting и безопасность
+- Кэширование с Redis
+- Мониторинг и метрики
 
-### 1. Kubernetes Cluster
-- EKS on AWS
-- Auto-scaling
+### 2. База данных
+- PostgreSQL для основных данных
+- Redis для кэширования и очередей
+- Elasticsearch для поиска
+
+### 3. Очереди и асинхронные задачи
+- Celery для обработки фоновых задач
+- Redis в качестве брокера сообщений
+- Отдельные очереди для:
+  - Email рассылок
+  - Push-уведомлений
+  - Модерации контента
+  - Матчинга пользователей
+  - Аналитики
+
+### 4. Хранение файлов
+- AWS S3 для хранения медиа-файлов
+- CloudFront CDN для раздачи статики
+- Локальное кэширование часто используемых файлов
+
+### 5. Мониторинг и логирование
+- Prometheus для сбора метрик
+- Grafana для визуализации
+- ELK Stack для логов
+- Sentry для отслеживания ошибок
+- Node Exporter для системных метрик
+
+### 6. Масштабирование
+- Kubernetes для оркестрации
+- Horizontal Pod Autoscaling
+- Pod Disruption Budgets
+- Load Balancing
 - Multi-zone deployment
-- High availability
-- Load balancing
 
-### 2. Monitoring Stack
-- Prometheus
-- Grafana
-- Jaeger
-- ELK Stack
-- CloudWatch
+## Kubernetes компоненты
 
-### 3. Data Storage
-- PostgreSQL (RDS)
-- Redis (ElastiCache)
-- MinIO (S3)
-- Elasticsearch
-- Kafka
+### 1. Deployments
+- Backend API (автомасштабирование 2-10 подов)
+- Celery Workers (автомасштабирование 2-8 подов)
+- Redis (StatefulSet)
+- PostgreSQL (StatefulSet)
+- Elasticsearch (StatefulSet)
 
-## Infrastructure as Code
+### 2. Services
+- LoadBalancer для API
+- ClusterIP для внутренних сервисов
+- NodePort для мониторинга
 
-### Terraform Configuration
-```hcl
-# VPC Configuration
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  version = "3.2.0"
-  
-  name = "pendo-vpc"
-  cidr = "10.0.0.0/16"
-  
-  azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-  
-  enable_nat_gateway = true
-  single_nat_gateway = false
-  
-  tags = {
-    Environment = "production"
-    Project     = "pendo"
-  }
-}
+### 3. Volumes
+- PersistentVolumeClaims для баз данных
+- EmptyDir для временных файлов
+- ConfigMaps для конфигурации
 
-# EKS Cluster
-module "eks" {
-  source = "terraform-aws-modules/eks/aws"
-  version = "17.1.0"
-  
-  cluster_name = "pendo-cluster"
-  cluster_version = "1.27"
-  
-  vpc_id = module.vpc.vpc_id
-  subnets = module.vpc.private_subnets
-  
-  node_groups = {
-    application = {
-      desired_capacity = 3
-      max_capacity     = 10
-      min_capacity     = 3
-      instance_types   = ["t3.large"]
-    }
-  }
-}
-```
+### 4. Безопасность
+- Network Policies
+- RBAC
+- Pod Security Policies
+- Secret Management
 
-## Kubernetes Resources
+## Масштабирование
 
-### Deployment Configuration
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pendo-api
-  namespace: pendo
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: pendo-api
-  template:
-    metadata:
-      labels:
-        app: pendo-api
-    spec:
-      containers:
-      - name: api
-        image: pendo-api:latest
-        resources:
-          requests:
-            cpu: 100m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-```
+### 1. Автоматическое масштабирование
+- CPU Utilization (70%)
+- Memory Utilization (80%)
+- Custom Metrics:
+  - Requests per second
+  - Queue length
+  - Response time
 
-## Monitoring
+### 2. CDN и кэширование
+- CloudFront для статических файлов
+- Redis для данных
+- Browser caching
+- API response caching
 
-### Prometheus Configuration
-```yaml
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+### 3. Балансировка нагрузки
+- Route53 DNS round-robin
+- Application Load Balancer
+- Session Affinity
+- Rate Limiting
 
-scrape_configs:
-  - job_name: 'pendo-api'
-    kubernetes_sd_configs:
-      - role: pod
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        regex: pendo-api
-        action: keep
-```
+## Мониторинг
 
-### Grafana Dashboards
-1. System Metrics
-   - CPU Usage
-   - Memory Usage
-   - Network I/O
-   - Disk Usage
+### 1. Системные метрики
+- CPU/Memory utilization
+- Disk I/O
+- Network traffic
+- Pod health
 
-2. Application Metrics
-   - Request Rate
-   - Error Rate
-   - Response Time
-   - Active Users
+### 2. Application метрики
+- Request latency
+- Error rates
+- Active users
+- Queue lengths
+- Cache hit rates
 
-3. Business Metrics
-   - Match Rate
-   - Message Rate
-   - User Growth
-   - Revenue
+### 3. Бизнес метрики
+- User registrations
+- Matches per day
+- Message volume
+- Premium conversions
 
-## Security
+## Безопасность
 
-### Network Security
-1. VPC Configuration
-   - Private subnets
-   - NAT gateways
-   - Security groups
-   - NACLs
+### 1. Network Security
+- VPC configuration
+- Security Groups
+- WAF rules
+- DDoS protection
 
-2. Access Control
-   - IAM roles
-   - RBAC
-   - Service accounts
-   - Pod security
+### 2. Application Security
+- Rate limiting
+- Input validation
+- JWT authentication
+- Permission system
+- Content moderation
 
-### Data Security
-1. Encryption
-   - At rest
-   - In transit
-   - Key management
-   - Secrets
-
-2. Compliance
-   - GDPR
-   - HIPAA
-   - SOC2
-   - ISO27001
+### 3. Data Security
+- Encryption at rest
+- Encryption in transit
+- Backup strategy
+- Disaster recovery
 
 ## CI/CD Pipeline
 
-### Build Stage
-```yaml
-build:
-  stage: build
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+### 1. Testing
+- Unit tests
+- Integration tests
+- E2E tests
+- Security scans
+- Performance tests
 
-test:
-  stage: test
-  script:
-    - pytest
-    - flutter test
+### 2. Deployment
+- Blue/Green deployment
+- Canary releases
+- Rollback capability
+- Automated scaling
 
-security:
-  stage: security
-  script:
-    - snyk test
-    - owasp-zap-scan
-```
-
-### Deploy Stage
-```yaml
-deploy:
-  stage: deploy
-  script:
-    - kubectl set image deployment/pendo-api \
-        pendo-api=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - kubectl rollout status deployment/pendo-api
-```
+### 3. Monitoring
+- Deployment health checks
+- Performance monitoring
+- Error tracking
+- User feedback
 
 ## Disaster Recovery
 
-### Backup Strategy
-1. Database Backups
-   - Daily full backups
-   - Point-in-time recovery
-   - Cross-region replication
-   - Backup testing
+### 1. Backup Strategy
+- Database backups (hourly)
+- File backups (daily)
+- Configuration backups
+- Cross-region replication
 
-2. Application Backups
-   - Config backups
-   - State backups
-   - Media backups
-   - Log archives
+### 2. Recovery Procedures
+- Database restoration
+- Service recovery
+- Configuration recovery
+- DNS failover
 
-### Recovery Procedures
-1. Database Recovery
-   - RDS snapshot restore
-   - Redis failover
-   - Elasticsearch reindex
-   - Data validation
-
-2. Application Recovery
-   - Rolling updates
-   - Blue-green deployment
-   - Canary releases
-   - Rollback procedures
-
-## Scaling Strategy
-
-### Horizontal Scaling
-1. Application Scaling
-   - HPA configuration
-   - Custom metrics
-   - Scaling policies
-   - Load testing
-
-2. Database Scaling
-   - Read replicas
-   - Sharding
-   - Connection pooling
-   - Query optimization
-
-### Vertical Scaling
-1. Resource Allocation
-   - CPU optimization
-   - Memory tuning
-   - Storage expansion
-   - Network capacity
-
-2. Performance Tuning
-   - Cache optimization
-   - Query optimization
-   - Connection tuning
-   - Thread management
-
-## Cost Optimization
-
-### Resource Management
-1. Instance Selection
-   - Right-sizing
-   - Spot instances
-   - Reserved instances
-   - Auto-scaling
-
-2. Storage Optimization
-   - Storage classes
-   - Lifecycle policies
-   - Compression
-   - Archival
-
-### Cost Monitoring
-1. Budget Alerts
-   - Usage alerts
-   - Cost alerts
-   - Trend analysis
-   - Optimization recommendations
-
-2. Resource Tracking
-   - Tag management
-   - Usage reports
-   - Cost allocation
-   - Waste detection
+### 3. High Availability
+- Multi-AZ deployment
+- Redundant services
+- Automatic failover
+- Data replication

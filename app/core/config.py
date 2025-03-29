@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Pendo"
     
     # Environment and debug settings
-    DEBUG: bool = False
-    ENVIRONMENT: str = "production"
+    DEBUG: bool = True
+    ENVIRONMENT: str = "development"
     ALLOWED_HOSTS: List[str] = ["*"]
     
     # Database settings
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     # Security settings
     SECRET_KEY: SecretStr
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     ALGORITHM: str = "HS256"
     
@@ -47,8 +47,15 @@ class Settings(BaseSettings):
     RATE_LIMIT_WHITELIST: Set[str] = set()  # IPs exempt from rate limiting
     
     # Redis settings
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
     REDIS_PASSWORD: Optional[SecretStr] = None
+    REDIS_URL: str = "redis://localhost:6379/0"
+    
+    # Monitoring
+    SENTRY_DSN: Optional[str] = None
+    ENABLE_METRICS: bool = True
     
     # MinIO settings
     MINIO_ROOT_USER: str
@@ -68,8 +75,8 @@ class Settings(BaseSettings):
     
     # Email settings
     SMTP_TLS: bool = True
-    SMTP_HOST: Optional[str] = None
     SMTP_PORT: Optional[int] = None
+    SMTP_HOST: Optional[str] = None
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[SecretStr] = None
     EMAILS_FROM_EMAIL: Optional[str] = None
@@ -82,7 +89,6 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    SENTRY_DSN: Optional[str] = None
     
     # Content security
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
@@ -90,7 +96,19 @@ class Settings(BaseSettings):
     CONTENT_SECURITY_POLICY: str = "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'"
     
     # Cache settings
+    CACHE_ENABLED: bool = True
     CACHE_TTL: int = 60 * 5  # 5 minutes
+    DEFAULT_CACHE_EXPIRE: int = 300  # 5 minutes
+    
+    # Rate limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_DEFAULT: str = "100/minute"
+    
+    # AWS
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET: Optional[str] = None
     
     # Moderation
     AUTO_APPROVE_TRUSTED_USERS: bool = False

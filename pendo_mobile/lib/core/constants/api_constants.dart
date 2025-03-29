@@ -66,6 +66,25 @@ class ApiConstants {
   static const feedback = '/feedback';
   static const support = '/support';
   
+  // Gifts
+  static const gifts = '/gifts';
+  static const receivedGifts = '/gifts/received';
+  static const sentGifts = '/gifts/sent';
+  static String sendGift(int giftId, int receiverId) => '/gifts/$giftId/send/$receiverId';
+  
+  // Premium
+  static const premium = '/premium';
+  static const premiumSubscribe = '/premium/subscribe';
+  static const premiumUnsubscribe = '/premium/unsubscribe';
+  static const premiumFeatures = '/premium/features';
+  static const premiumStatus = '/premium/status';
+  
+  // Events
+  static const events = '/events';
+  static String eventDetails(int id) => '/events/$id';
+  static String joinEvent(int id) => '/events/$id/join';
+  static String leaveEvent(int id) => '/events/$id/leave';
+  
   // Headers
   static const authHeader = 'Authorization';
   static const bearerPrefix = 'Bearer ';
