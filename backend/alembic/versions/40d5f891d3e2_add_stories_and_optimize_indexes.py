@@ -51,7 +51,7 @@ def upgrade():
     op.create_index('ix_story_views_viewer_id', 'story_views', ['viewer_id'])
 
     # Add GiST index for location search optimization
-    op.execute('CREATE INDEX IF NOT EXISTS idx_user_profiles_location ON user_profiles USING GIST (location);')
+    op.execute('CREATE INDEX idx_user_profiles_location ON user_profiles USING GIST (location);')
     
     # Add indexes for matching optimization
     op.create_index('ix_likes_from_to_users', 'likes', ['from_user_id', 'to_user_id'])
@@ -59,31 +59,24 @@ def upgrade():
     
     # Add partial index for active users
     op.execute(
-        'CREATE INDEX IF NOT EXISTS ix_users_active ON users (id) WHERE is_active = true;'
+        'CREATE INDEX ix_users_active ON users (id) WHERE is_active = true;'
     )
     
     # Add index for user score sorting
-    op.execute('CREATE INDEX IF NOT EXISTS ix_user_scores_score ON user_scores (score DESC);')
+    op.create_index('ix_user_scores_score', 'user_scores', ['score DESC'])
 
     # Partition messages table by month
     op.execute("""
         CREATE TABLE messages_new (
-            id INTEGER,
-            match_id INTEGER,
-            sender_id INTEGER,
-            content TEXT NOT NULL,
-            content_type VARCHAR DEFAULT 'text',
-            is_read BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            PRIMARY KEY (id, created_at)
+            LIKE messages
+            INCLUDING ALL
         ) PARTITION BY RANGE (created_at);
     """)
     
     # Create partitions for the last 3 months and future month
     for i in range(-2, 2):
-        suffix = "past" if i < 0 else "future" if i > 0 else "current"
         op.execute(f"""
-            CREATE TABLE messages_{suffix}_{abs(i)} 
+            CREATE TABLE messages_p{i} 
             PARTITION OF messages_new 
             FOR VALUES FROM 
                 (DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '{i} month') 
@@ -98,11 +91,11 @@ def downgrade():
     op.drop_table('stories')
     
     # Drop indexes
-    op.execute('DROP INDEX IF EXISTS idx_user_profiles_location;')
+    op.execute('DROP INDEX idx_user_profiles_location;')
     op.drop_index('ix_likes_from_to_users')
     op.drop_index('ix_matches_users')
-    op.execute('DROP INDEX IF EXISTS ix_users_active;')
-    op.execute('DROP INDEX IF EXISTS ix_user_scores_score;')
+    op.execute('DROP INDEX ix_users_active;')
+    op.drop_index('ix_user_scores_score')
     
     # Drop partitioned messages table
-    op.execute('DROP TABLE IF EXISTS messages_new CASCADE;')
+    op.execute('DROP TABLE messages_new CASCADE;')

@@ -1,8 +1,8 @@
-"""add postgis and user scores
+"""add_postgis_and_user_scores
 
 Revision ID: 30c0486c441e
-Revises: 002
-Create Date: 2025-03-30 00:12:45.000000
+Revises: 001
+Create Date: 2025-03-29 21:21:51.952186
 
 """
 from typing import Sequence, Union
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '30c0486c441e'
-down_revision: Union[str, None] = '002'
+down_revision: Union[str, None] = '001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
