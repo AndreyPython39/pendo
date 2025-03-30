@@ -1,5 +1,6 @@
-from pydantic import BaseSettings
+from pydantic import BaseSettings, validator
 from typing import Optional
+
 
 class Settings(BaseSettings):
     # Application settings
@@ -13,6 +14,12 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
+        if v:
+            return v
+        return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
     
     # JWT settings
     SECRET_KEY: str
@@ -62,5 +69,6 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+
 
 settings = Settings()
