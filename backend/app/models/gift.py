@@ -1,8 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 
 from .base import Base
+from .types import GiftType
 
 class VirtualGift(Base):
     __tablename__ = "virtual_gifts"
@@ -37,3 +38,19 @@ class GiftCollection(Base):
     count = Column(Integer, default=0)
     first_received = Column(DateTime, nullable=False)
     last_received = Column(DateTime, nullable=False)
+
+class Gift(Base):
+    __tablename__ = "gifts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    from_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    to_id = Column(Integer, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    gift_type = Column(SQLAlchemyEnum(GiftType), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    sender = relationship("User", foreign_keys=[from_id], back_populates="gifts_sent")
+    receiver = relationship("User", foreign_keys=[to_id], back_populates="gifts_received")
+
+    def __repr__(self):
+        return f"<Gift(from_id={self.from_id}, to_id={self.to_id}, type={self.gift_type})>"

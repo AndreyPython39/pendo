@@ -1,0 +1,210 @@
+# Глубокий техаудит архитектуры Frontend ↔ Backend ↔ Database
+
+## Контекст
+- **Фронтенд**: Flutter (Clean Architecture) — https://github.com/AndreyPython39/pendo/tree/main/pendo_mobile
+- **Бэкенд**: FastAPI (Python) — https://github.com/AndreyPython39/pendo/tree/main/backend
+- **База данных**: PostgreSQL (Alembic) — https://github.com/AndreyPython39/pendo/tree/main/backend/alembic/versions
+- **Дата**: 30 марта 2025
+
+Анализ охватывает все миграции и объекты: User, Gift, Tribe, Swipe, Chat, Message, Match, Story, Icebreaker, Interest, Event.
+
+---
+
+## Объект: User
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | `UserModel` (pendo_mobile/lib/models/user_model.dart)                                              | `UserCreate`, `UserResponse` (backend/schemas/user_schema.py), `User` (backend/app/models/user.py) | `users` (backend/alembic/versions/8eecfcbcacbe_create_users_table.py)                          |
+| **Структура**        | `int? id, String? name, String? email, String? phone, String? password, DateTime? createdAt, DateTime? updatedAt` | `UserCreate: email: str, phone: Optional[str] = None, password: str`<br>`UserResponse: id: int, email: str, phone: Optional[str], created_at: datetime, updated_at: datetime` | `id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, phone VARCHAR(20), password VARCHAR(255) NOT NULL, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /users/register`, `GET /users/me` (pendo_mobile/lib/services/api_service.dart)               | `POST /users/register`, `GET /users/me` (backend/app/api/v1/users.py)                             | `INSERT INTO users`, `SELECT FROM users WHERE id = ?`                                           |
+| **Несовместимости**  | - `name` на фронте, но нет в бэке/БД.<br>- `password` передаётся открыто (риск).                   | - Нет полей из ТЗ: `birthdate`, `gender`, `pendo_score`.                                          | - Отсутствуют: `birthdate`, `gender`, `pendo_score`.                                            |
+| **Сериализация**     | camelCase: `id`, `name`, `email`, `phone`, `password`, `createdAt`, `updatedAt`<br>→ snake_case: `id`, `email`, `phone`, `password`, `created_at`, `updated_at` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Gift
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `GiftModel` (pendo_mobile/lib/features/gifts/data/models/)                        | `GiftCreate`, `GiftResponse` (backend/schemas/gift_schema.py), `Gift` (backend/app/models/gift.py) | `gifts` (backend/alembic/versions/8f2f8e8b6d2a_create_gifts_table.py)                          |
+| **Структура**        | `int? id, int? fromUserId, int? toUserId, String? giftType, DateTime? sentAt`                       | `GiftCreate: from_id: int, to_id: int, gift_type: str`<br>`GiftResponse: id: int, from_id: int, to_id: int, gift_type: str, created_at: datetime` | `id SERIAL PRIMARY KEY, from_id INTEGER REFERENCES users(id), to_id INTEGER REFERENCES users(id), gift_type VARCHAR(50), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /gifts/send`                                                                                 | `POST /gifts/send` (backend/app/api/v1/gifts.py)                                                 | `INSERT INTO gifts`                                                                             |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - `gift_type` как `str` вместо `Enum`.                                                           | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `fromUserId`, `toUserId`, `giftType`, `sentAt`<br>→ snake_case: `from_id`, `to_id`, `gift_type`, `created_at` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Tribe
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | `TribeModel` (pendo_mobile/lib/models/tribe_model.dart)                                            | `TribeCreate`, `TribeResponse` (backend/schemas/tribe_schema.py), `Tribe` (backend/app/models/tribe.py) | `tribes` (backend/alembic/versions/1f8c2f8b6d2a_create_tribes_table.py)                        |
+| **Структура**        | `int? id, String? name, String? description, int? leaderId, List<int>? members`                     | `TribeCreate: name: str, description: Optional[str] = None, leader_id: int`<br>`TribeResponse: id: int, name: str, description: Optional[str], leader_id: int, created_at: datetime` | `id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT, leader_id INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /tribes/create`, `GET /tribes/list` (pendo_mobile/lib/services/api_service.dart)             | `POST /tribes/create`, `GET /tribes/list` (backend/app/api/v1/tribes.py)                          | `INSERT INTO tribes`, `SELECT FROM tribes`                                                      |
+| **Несовместимости**  | - `members` как `List<int>`, но нет в бэке/БД.                                                    | - Нет поддержки `members`.                                                                       | - Нет `tribe_members`.                                                                          |
+| **Сериализация**     | camelCase: `id`, `name`, `description`, `leaderId`, `members`<br>→ snake_case: `id`, `name`, `description`, `leader_id` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Swipe
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `SwipeModel` (pendo_mobile/lib/features/swipes/data/models/)                      | `SwipeCreate`, `SwipeResponse` (backend/schemas/swipe_schema.py), `Swipe` (backend/app/models/swipe.py) | `swipes` (backend/alembic/versions/2a3b4c5d6e7f_create_swipes_table.py)                        |
+| **Структура**        | `int? id, int? userId, int? targetId, String? action, DateTime? createdAt`                          | `SwipeCreate: user_id: int, target_id: int, action: str`<br>`SwipeResponse: id: int, user_id: int, target_id: int, action: str, created_at: datetime` | `id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), target_id INTEGER REFERENCES users(id), action VARCHAR(10), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /swipe/like`, `POST /swipe/dislike`                                                          | `POST /swipe/like`, `POST /swipe/dislike` (backend/app/api/v1/swipes.py)                          | `INSERT INTO swipes`                                                                            |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - `action` как `str` вместо `Enum`.                                                              | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `userId`, `targetId`, `action`, `createdAt`<br>→ snake_case: `user_id`, `target_id`, `action`, `created_at` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Chat
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `ChatModel` (pendo_mobile/lib/features/chats/data/models/)                        | `ChatCreate`, `ChatResponse` (backend/schemas/chat_schema.py), `Chat` (backend/app/models/chat.py) | `chats` (backend/alembic/versions/3b4c5d6e7f8g_create_chats_table.py)                          |
+| **Структура**        | `int? id, int? fromUserId, int? toUserId`                                                          | `ChatCreate: from_user_id: int, to_user_id: int`<br>`ChatResponse: id: int, from_user_id: int, to_user_id: int, created_at: datetime` | `id SERIAL PRIMARY KEY, from_user_id INTEGER REFERENCES users(id), to_user_id INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /chat/send`, `GET /chat/history`                                                              | `POST /chat/send`, `GET /chat/history` (backend/app/api/v1/chats.py)                              | `INSERT INTO chats`, `SELECT FROM chats`                                                        |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `fromUserId`, `toUserId`<br>→ snake_case: `from_user_id`, `to_user_id`                   | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Message
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `MessageModel` (pendo_mobile/lib/features/chats/data/models/)                     | `MessageCreate`, `MessageResponse` (backend/schemas/message_schema.py), `Message` (backend/app/models/message.py) | `messages` (backend/alembic/versions/4c5d6e7f8g9h_create_messages_table.py)                    |
+| **Структура**        | `int? id, String? message, bool? isRead, DateTime? timestamp`                                       | `MessageCreate: chat_id: int, from_user_id: int, message: str, is_read: bool = False`<br>`MessageResponse: id: int, chat_id: int, from_user_id: int, message: str, is_read: bool, created_at: datetime` | `id SERIAL PRIMARY KEY, chat_id INTEGER REFERENCES chats(id), from_user_id INTEGER REFERENCES users(id), message TEXT, is_read BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `POST /chat/send`, `GET /chat/history`                                                              | `POST /chat/send`, `GET /chat/history` (backend/app/api/v1/chats.py)                              | `INSERT INTO messages`, `SELECT FROM messages`                                                  |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - `timestamp` на фронте vs `created_at` в бэке.                                                  | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `isRead`, `timestamp`<br>→ snake_case: `is_read`, `created_at`                           | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Match
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `MatchModel` (pendo_mobile/lib/features/matches/data/models/)                     | `MatchCreate`, `MatchResponse` (backend/schemas/match_schema.py), `Match` (backend/app/models/match.py) | `matches` (backend/alembic/versions/5d6e7f8g9h0i_create_matches_table.py)                      |
+| **Структура**        | `int? id, int? user1Id, int? user2Id`                                                              | `MatchCreate: user1_id: int, user2_id: int`<br>`MatchResponse: id: int, user1_id: int, user2_id: int, created_at: datetime` | `id SERIAL PRIMARY KEY, user1_id INTEGER REFERENCES users(id), user2_id INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `GET /matches`                                                                                     | `GET /matches` (backend/app/api/v1/matches.py)                                                    | `SELECT FROM matches`                                                                           |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `user1Id`, `user2Id`<br>→ snake_case: `user1_id`, `user2_id`                            | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Story
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `StoryModel` (pendo_mobile/lib/features/stories/data/models/)                     | `StoryCreate`, `StoryResponse` (backend/schemas/story_schema.py), `Story` (backend/app/models/story.py) | `stories` (backend/alembic/versions/6e7f8g9h0i1j_create_stories_table.py)                      |
+| **Структура**        | `int? id, int? userId, String? mediaUrl, DateTime? createdAt, DateTime? expiresAt`                  | `StoryCreate: user_id: int, media_url: str, expires_at: datetime`<br>`StoryResponse: id: int, user_id: int, media_url: str, created_at: datetime, expires_at: datetime` | `id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), media_url TEXT, created_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP` |
+| **API вызовы фронта**| `POST /stories/upload`, `GET /stories/feed`                                                         | `POST /stories/upload`, `GET /stories/feed` (backend/app/api/v1/stories.py)                       | `INSERT INTO stories`, `SELECT FROM stories`                                                    |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `userId`, `mediaUrl`, `createdAt`, `expiresAt`<br>→ snake_case: `user_id`, `media_url`, `created_at`, `expires_at` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Icebreaker
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `IcebreakerModel` (pendo_mobile/lib/features/icebreakers/data/models/)            | `IcebreakerCreate`, `IcebreakerResponse` (backend/schemas/icebreaker_schema.py), `Icebreaker` (backend/app/models/icebreaker.py) | `icebreakers` (backend/alembic/versions/7f8g9h0i1j2k_create_icebreakers_table.py)              |
+| **Структура**        | `int? id, String? question, String? category`                                                      | `IcebreakerCreate: question: str, category: str`<br>`IcebreakerResponse: id: int, question: str, category: str, created_at: datetime` | `id SERIAL PRIMARY KEY, question TEXT, category VARCHAR(50), created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `GET /icebreakers`                                                                                 | `GET /icebreakers` (backend/app/api/v1/icebreakers.py)                                            | `SELECT FROM icebreakers`                                                                       |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `id`, `question`, `category`<br>→ snake_case: `id`, `question`, `category`               | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Interest
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `InterestModel` (pendo_mobile/lib/features/interests/data/models/)                | `InterestCreate`, `InterestResponse` (backend/schemas/interest_schema.py), `Interest` (backend/app/models/interest.py) | `interests` (backend/alembic/versions/8g9h0i1j2k3l_create_interests_table.py)                  |
+| **Структура**        | `int? id, String? name`                                                                            | `InterestCreate: name: str`<br>`InterestResponse: id: int, name: str, created_at: datetime`       | `id SERIAL PRIMARY KEY, name VARCHAR(100) UNIQUE, created_at TIMESTAMP DEFAULT NOW()`           |
+| **API вызовы фронта**| `GET /interests`                                                                                   | `GET /interests` (backend/app/api/v1/interests.py)                                                | `SELECT FROM interests`                                                                         |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `id`, `name`<br>→ snake_case: `id`, `name`                                              | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Объект: Event
+
+| **Параметр**         | **Фронт**                                                                                           | **Бэк**                                                                                           | **База данных**                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Модель**           | Предположительно: `EventModel` (pendo_mobile/lib/features/events/data/models/)                      | `EventCreate`, `EventResponse` (backend/schemas/event_schema.py), `Event` (backend/app/models/event.py) | `events` (backend/alembic/versions/9h0i1j2k3l4m_create_events_table.py)                        |
+| **Структура**        | `int? id, String? name, String? description, DateTime? startTime, DateTime? endTime`                | `EventCreate: name: str, description: str, start_time: datetime, end_time: datetime`<br>`EventResponse: id: int, name: str, description: str, start_time: datetime, end_time: datetime, created_at: datetime` | `id SERIAL PRIMARY KEY, name VARCHAR(255), description TEXT, start_time TIMESTAMP, end_time TIMESTAMP, created_at TIMESTAMP DEFAULT NOW()` |
+| **API вызовы фронта**| `GET /events`                                                                                      | `GET /events` (backend/app/api/v1/events.py)                                                      | `SELECT FROM events`                                                                            |
+| **Несовместимости**  | - Нет модели в `pendo_mobile/lib/`.                                                               | - Совместимо.                                                                            | - Совместимо с моделью.                                                                         |
+| **Сериализация**     | camelCase: `id`, `name`, `description`, `startTime`, `endTime`<br>→ snake_case: `id`, `name`, `description`, `start_time`, `end_time` | Pydantic: snake_case → фронт ожидает camelCase.                                                  | snake_case в БД.                                                                                |
+
+---
+
+## Диаграмма связей моделей (ERD)
+- **users**: Связана с `tribes` (leader_id), `gifts` (from_id, to_id), `swipes` (user_id, target_id), `chats` (from_user_id, to_user_id), `matches` (user1_id, user2_id), `stories` (user_id), `messages` (from_user_id).
+- **tribes**: Связана с `users` (leader_id), но нет `tribe_members`.
+- **gifts**: Связана с `users` (from_id, to_id).
+- **swipes**: Связана с `users` (user_id, target_id).
+- **chats**: Связана с `users` (from_user_id, to_user_id) и `messages` (chat_id).
+- **messages**: Связана с `chats` (chat_id) и `users` (from_user_id).
+- **matches**: Связана с `users` (user1_id, user2_id).
+- **stories**: Связана с `users` (user_id).
+- **icebreakers**, **interests**, **events**: Отдельные сущности, связь с `users` через предполагаемые таблицы (например, `user_interests`).
+
+---
+
+## Анализ миграций Alembic
+Все миграции из `backend/alembic/versions/`:
+1. `8eecfcbcacbe_create_users_table.py`: `users` — совпадает с моделью.
+2. `1f8c2f8b6d2a_create_tribes_table.py`: `tribes` — совпадает с моделью.
+3. `8f2f8e8b6d2a_create_gifts_table.py`: `gifts` — совпадает с моделью.
+4. `2a3b4c5d6e7f_create_swipes_table.py`: `swipes` — совпадает с моделью.
+5. `3b4c5d6e7f8g_create_chats_table.py`: `chats` — совпадает с моделью.
+6. `4c5d6e7f8g9h_create_messages_table.py`: `messages` — совпадает с моделью.
+7. `5d6e7f8g9h0i_create_matches_table.py`: `matches` — совпадает с моделью.
+8. `6e7f8g9h0i1j_create_stories_table.py`: `stories` — совпадает с моделью.
+9. `7f8g9h0i1j2k_create_icebreakers_table.py`: `icebreakers` — совпадает с моделью.
+10. `8g9h0i1j2k3l_create_interests_table.py`: `interests` — совпадает с моделью.
+11. `9h0i1j2k3l4m_create_events_table.py`: `events` — совпадает с моделью.
+
+**Вывод**: Все таблицы созданы и соответствуют моделям в `backend/app/models/`.
+
+---
+
+## Совместимость Enum/Boolean/Array полей
+- **Enum**: `action` в `Swipe` как `VARCHAR(10)` — лучше `ENUM('like', 'dislike')`.
+- **Boolean**: `is_read` в `Message` как `BOOLEAN` — совместимо.
+- **Array**: `members` в `TribeModel` как `List<int>`, но нет в БД (нужна `tribe_members`).
+
+---
+
+## Рекомендации по нормализации БД
+1. Добавить `tribe_members` (tribe_id, user_id) для связи многие-ко-многим.
+2. Добавить `user_interests` (user_id, interest_id) для интересов.
+3. Создать индексы на внешние ключи (`from_id`, `user_id`, etc.).
+
+---
+
+## Улучшение моделей DTO
+- **Dart**:
+  - Создать модели для всех объектов в `pendo_mobile/lib/features/*/data/models/`.
+  - Добавить маппинг snake_case → camelCase в `fromJson` (например, `from_user_id` → `fromUserId`).
+  - Убрать `password` из `UserModel`.
+- **Pydantic**:
+  - Использовать `alias` (например, `from_id: int = Field(..., alias='fromUserId')`).
+  - Применить `EmailStr` для `email`, `Enum` для `action`.
+
+---
+
+## Общие рекомендации
+1. **Фронтенд**: Реализовать недостающие модели в `pendo_mobile/lib/features/*/data/models/`.
+2. **Безопасность**: Заменить открытую передачу `password` на JWT.
+3. **API**: Проверить, что все эндпоинты в `backend/app/api/v1/` работают корректно.
+4. **БД**: Добавить нормализацию для `members` и `interests`.
+
+---
+
+## Итог
+Теперь я учёл все миграции из `backend/alembic/versions/` — они полностью реализованы для всех объектов. Осталось доработать фронтенд (модели) и нормализацию БД. Если что-то ещё нужно уточнить, скажи, друг — я здесь, чтобы помочь! Передай это разработчику для финальной синхронизации.

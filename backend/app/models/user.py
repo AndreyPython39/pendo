@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional, List, Dict
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, JSON, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, JSON, Table, Date, Numeric, Text, CheckConstraint
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
 
 from .base import Base
+from .types import Gender
 
 # Таблица связи пользователей и интересов
 user_interests = Table(
@@ -25,33 +26,48 @@ class Interest(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True, index=True)
-    phone = Column(String, unique=True, index=True)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_verified = Column(Boolean, default=False)
-    is_premium = Column(Boolean, default=False)
-    last_active = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    phone = Column(String(20))
+    password = Column(String(255), nullable=False)
+    name = Column(String(255))
+    birthdate = Column(Date)
+    gender = Column(String(10))
+    pendo_score = Column(Integer, default=0)
+    avatar_url = Column(Text)
+    bio = Column(Text)
+    location_lat = Column(Numeric(9, 6))
+    location_lon = Column(Numeric(9, 6))
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    profile = relationship("UserProfile", back_populates="user", uselist=False)
-    score = relationship("UserScore", back_populates="user", uselist=False)
-    current_tribe = relationship("Tribe", back_populates="members")
-    stories = relationship("Story", back_populates="user")
-    streams = relationship("LiveStream", back_populates="user")
-    gifts_sent = relationship("GiftTransaction", foreign_keys="[GiftTransaction.sender_id]")
-    gifts_received = relationship("GiftTransaction", foreign_keys="[GiftTransaction.receiver_id]")
     swipes_made = relationship("Swipe", foreign_keys="[Swipe.user_id]", back_populates="user")
     swipes_received = relationship("Swipe", foreign_keys="[Swipe.target_id]", back_populates="target")
-    matches_as_user1 = relationship("Match", foreign_keys="[Match.user1_id]", back_populates="user1")
-    matches_as_user2 = relationship("Match", foreign_keys="[Match.user2_id]", back_populates="user2")
-    sent_messages = relationship("Message", back_populates="sender")
-    story_views = relationship("StoryView", back_populates="viewer")
-    stream_comments = relationship("StreamComment", back_populates="user")
-    icebreaker_answers = relationship("IcebreakerAnswer", back_populates="user")
+    gifts_sent = relationship("Gift", foreign_keys="[Gift.from_id]", back_populates="sender")
+    gifts_received = relationship("Gift", foreign_keys="[Gift.to_id]", back_populates="receiver")
+    stories = relationship("Story", back_populates="user")
+    interests = relationship("Interest", secondary="user_interests", back_populates="users")
+    tribes = relationship("Tribe", secondary="tribe_members", back_populates="members")
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint(
+            "gender IN ('male', 'female', 'other')",
+            name="check_gender"
+        ),
+        CheckConstraint(
+            "pendo_score >= 0 AND pendo_score <= 100",
+            name="check_pendo_score"
+        ),
+        CheckConstraint(
+            "(location_lat IS NULL AND location_lon IS NULL) OR (location_lat IS NOT NULL AND location_lon IS NOT NULL)",
+            name="check_location"
+        ),
+    )
+
+    def __repr__(self):
+        return f"<User(id={self.id}, email={self.email}, name={self.name})>"
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"

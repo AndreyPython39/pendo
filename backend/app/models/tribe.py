@@ -1,9 +1,17 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON, Boolean, Table
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
 
 from .base import Base
+
+tribe_members = Table(
+    'tribe_members',
+    Base.metadata,
+    Column('tribe_id', String, ForeignKey('tribes.id', ondelete='CASCADE'), primary_key=True),
+    Column('user_id', String, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
+    Column('joined_at', DateTime, nullable=False, server_default='now()')
+)
 
 class Tribe(Base):
     __tablename__ = "tribes"
@@ -21,7 +29,10 @@ class Tribe(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    members = relationship("User", back_populates="current_tribe")
+    members = relationship("User", 
+                         secondary=tribe_members,
+                         backref="tribes",
+                         lazy="dynamic")
     events = relationship("TribeEvent", back_populates="tribe")
     votes = relationship("TribeVote", back_populates="tribe")
 
