@@ -1,10 +1,26 @@
 from datetime import datetime
 from typing import Optional, List, Dict
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, JSON, Table
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
 
 from .base import Base
+
+# Таблица связи пользователей и интересов
+user_interests = Table(
+    'user_interests',
+    Base.metadata,
+    Column('user_profile_id', String, ForeignKey('user_profiles.id')),
+    Column('interest_id', String, ForeignKey('interests.id'))
+)
+
+class Interest(Base):
+    __tablename__ = "interests"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, unique=True, index=True)
+    category = Column(String, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class User(Base):
     __tablename__ = "users"
@@ -41,7 +57,6 @@ class UserProfile(Base):
     bio = Column(String)
     location = Column(Geography(geometry_type='POINT', srid=4326))
     distance = Column(Float)  # Distance from search point in km
-    interests = Column(JSON)
     temperament = Column(String)  # MBTI
     extra_data = Column(JSON)
     profile_photos = Column(JSON)  # List of photo URLs
@@ -53,6 +68,7 @@ class UserProfile(Base):
 
     # Relationships
     user = relationship("User", back_populates="profile")
+    interests = relationship("Interest", secondary=user_interests)
 
 class UserScore(Base):
     __tablename__ = "user_scores"
