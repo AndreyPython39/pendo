@@ -8,9 +8,12 @@ Base = declarative_base()
 # Import all models here
 from ..models.user import User, UserProfile, UserScore
 from ..models.gift import VirtualGift, GiftTransaction, GiftCollection
-from ..models.story import Story, LiveStream, StoryReaction
+from ..models.story import Story, LiveStream, StoryView, StreamComment
 from ..models.tribe import Tribe, TribeEvent, TribeVote
-from ..models.matches import Swipe, Match, Message, IcebreakerQuestion, IcebreakerAnswer
+from ..models.swipe import Swipe
+from ..models.match import Match
+from ..models.message import Message
+from ..models.icebreaker import IcebreakerQuestion, IcebreakerAnswer
 
 # Create SQLAlchemy engine
 engine = create_engine('postgresql://pendo:pendopass@localhost/pendo')
