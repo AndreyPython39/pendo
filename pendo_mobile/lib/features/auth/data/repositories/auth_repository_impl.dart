@@ -12,124 +12,12 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._dio, this._prefs);
 
   @override
-  Future<AuthResponseModel> login({
-    String? email,
-    String? phone,
-    required String password,
+  Future<void> requestCode({
+    required String email,
   }) async {
     try {
-      final response = await _dio.post(
-        ApiConstants.login,
-        data: LoginRequestModel(
-          email: email,
-          phone: phone,
-          password: password,
-        ).toJson(),
-      );
-
-      final authResponse = AuthResponseModel.fromJson(response.data);
-      await _saveAuthData(authResponse);
-      return authResponse;
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<AuthResponseModel> register({
-    String? email,
-    String? phone,
-    required String password,
-    required String name,
-    required int age,
-    String? bio,
-    required List<String> interests,
-  }) async {
-    try {
-      final response = await _dio.post(
-        ApiConstants.register,
-        data: RegisterRequestModel(
-          email: email,
-          phone: phone,
-          password: password,
-          name: name,
-          age: age,
-          bio: bio,
-          interests: interests,
-        ).toJson(),
-      );
-
-      final authResponse = AuthResponseModel.fromJson(response.data);
-      await _saveAuthData(authResponse);
-      return authResponse;
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<void> verifyEmail(String code) async {
-    try {
       await _dio.post(
-        ApiConstants.verifyEmail,
-        data: VerificationRequestModel(
-          code: code,
-          type: 'email',
-        ).toJson(),
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<void> verifyPhone(String code) async {
-    try {
-      await _dio.post(
-        ApiConstants.verifyPhone,
-        data: VerificationRequestModel(
-          code: code,
-          type: 'phone',
-        ).toJson(),
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<AuthResponseModel> refreshToken(String refreshToken) async {
-    try {
-      final response = await _dio.post(
-        ApiConstants.refreshToken,
-        data: {
-          'refresh_token': refreshToken,
-        },
-      );
-
-      final authResponse = AuthResponseModel.fromJson(response.data);
-      await _saveAuthData(authResponse);
-      return authResponse;
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<void> logout() async {
-    try {
-      await _dio.post(ApiConstants.logout);
-      await _clearAuthData();
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<void> forgotPassword(String email) async {
-    try {
-      await _dio.post(
-        ApiConstants.forgotPassword,
+        ApiConstants.requestCode,
         data: {
           'email': email,
         },
@@ -140,28 +28,114 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> resetPassword({
-    required String token,
-    required String newPassword,
+  Future<AuthResponseModel> verifyCode({
+    required String email,
+    required String code,
   }) async {
     try {
-      await _dio.post(
-        ApiConstants.resetPassword,
+      final response = await _dio.post(
+        ApiConstants.verifyCode,
         data: {
-          'token': token,
-          'new_password': newPassword,
+          'email': email,
+          'code': code,
         },
       );
+
+      final authResponse = AuthResponseModel.fromJson(response.data);
+      
+      // Save tokens
+      await _prefs.setString('access_token', authResponse.accessToken);
+      await _prefs.setString('refresh_token', authResponse.refreshToken);
+      
+      // Save user
+      await _prefs.setString('user', response.data['user'].toString());
+
+      return authResponse;
     } catch (e) {
       throw _handleError(e);
     }
   }
 
   @override
-  Future<UserModel> getCurrentUser() async {
+  Future<AuthResponseModel> register({
+    String? email,
+    String? phone,
+    required String name,
+    required int age,
+    String? bio,
+    required List<String> interests,
+  }) async {
     try {
-      final response = await _dio.get(ApiConstants.currentUser);
-      return UserModel.fromJson(response.data);
+      final response = await _dio.post(
+        ApiConstants.register,
+        data: {
+          if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
+          'name': name,
+          'age': age,
+          if (bio != null) 'bio': bio,
+          'interests': interests,
+        },
+      );
+
+      final authResponse = AuthResponseModel.fromJson(response.data);
+      
+      // Save tokens
+      await _prefs.setString('access_token', authResponse.accessToken);
+      await _prefs.setString('refresh_token', authResponse.refreshToken);
+      
+      // Save user
+      await _prefs.setString('user', response.data['user'].toString());
+
+      return authResponse;
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await _dio.post(ApiConstants.logout);
+      await _clearStorage();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<UserModel?> getCurrentUser() async {
+    try {
+      final userJson = _prefs.getString('user');
+      if (userJson != null) {
+        return UserModel.fromJson(userJson as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> refreshToken() async {
+    try {
+      final refreshToken = _prefs.getString('refresh_token');
+      if (refreshToken == null) {
+        throw Exception('No refresh token found');
+      }
+
+      final response = await _dio.post(
+        ApiConstants.refreshToken,
+        data: {
+          'refresh_token': refreshToken,
+        },
+      );
+
+      final authResponse = AuthResponseModel.fromJson(response.data);
+      
+      // Save new tokens
+      await _prefs.setString('access_token', authResponse.accessToken);
+      await _prefs.setString('refresh_token', authResponse.refreshToken);
     } catch (e) {
       throw _handleError(e);
     }
@@ -182,12 +156,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> isLoggedIn() async {
-    final token = _prefs.getString('access_token');
-    return token != null;
-  }
-
-  @override
   Future<void> updateLastActive() async {
     try {
       await _dio.post(ApiConstants.updateLastActive);
@@ -196,100 +164,20 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<void> setActive(bool isActive) async {
-    try {
-      await _dio.post(
-        ApiConstants.setActive,
-        data: {
-          'is_active': isActive,
-        },
-      );
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<List<GiftTransactionModel>> getGiftsSent({
-    int skip = 0,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.giftsSent,
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-        },
-      );
-      return (response.data as List)
-          .map((x) => GiftTransactionModel.fromJson(x))
-          .toList();
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<List<GiftTransactionModel>> getGiftsReceived({
-    int skip = 0,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.giftsReceived,
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-        },
-      );
-      return (response.data as List)
-          .map((x) => GiftTransactionModel.fromJson(x))
-          .toList();
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<List<LiveStreamModel>> getStreams({
-    int skip = 0,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.streams,
-        queryParameters: {
-          'skip': skip,
-          'limit': limit,
-        },
-      );
-      return (response.data as List)
-          .map((x) => LiveStreamModel.fromJson(x))
-          .toList();
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Future<void> _saveAuthData(AuthResponseModel auth) async {
-    await _prefs.setString('access_token', auth.accessToken);
-    await _prefs.setString('refresh_token', auth.refreshToken);
-  }
-
-  Future<void> _clearAuthData() async {
+  Future<void> _clearStorage() async {
     await _prefs.remove('access_token');
     await _prefs.remove('refresh_token');
+    await _prefs.remove('user');
   }
 
-  Exception _handleError(dynamic error) {
-    if (error is DioError) {
-      if (error.response?.data != null) {
-        return Exception(error.response?.data['message']);
+  String _handleError(dynamic error) {
+    if (error is DioException) {
+      if (error.response?.data != null &&
+          error.response?.data['message'] != null) {
+        return error.response?.data['message'];
       }
-      return Exception(error.message);
+      return error.message ?? 'Something went wrong';
     }
-    return Exception('An unexpected error occurred');
+    return error.toString();
   }
 }

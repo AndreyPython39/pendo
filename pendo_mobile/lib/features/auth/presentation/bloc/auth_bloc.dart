@@ -7,41 +7,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
   AuthBloc(this._authRepository) : super(AuthInitial()) {
-    on<LoginWithEmailEvent>(_onLoginWithEmail);
-    on<LoginWithPhoneEvent>(_onLoginWithPhone);
+    on<RequestCodeEvent>(_onRequestCode);
+    on<VerifyCodeEvent>(_onVerifyCode);
     on<RegisterEvent>(_onRegister);
-    on<VerifyEmailEvent>(_onVerifyEmail);
-    on<VerifyPhoneEvent>(_onVerifyPhone);
     on<LogoutEvent>(_onLogout);
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<RefreshTokenEvent>(_onRefreshToken);
   }
 
-  Future<void> _onLoginWithEmail(
-    LoginWithEmailEvent event,
+  Future<void> _onRequestCode(
+    RequestCodeEvent event,
     Emitter<AuthState> emit,
   ) async {
     try {
       emit(AuthLoading());
-      final response = await _authRepository.login(
+      await _authRepository.requestCode(
         email: event.email,
-        password: event.password,
       );
-      emit(AuthAuthenticated(response.user));
+      emit(AuthCodeSent());
     } catch (e) {
       emit(AuthError(e.toString()));
     }
   }
 
-  Future<void> _onLoginWithPhone(
-    LoginWithPhoneEvent event,
+  Future<void> _onVerifyCode(
+    VerifyCodeEvent event,
     Emitter<AuthState> emit,
   ) async {
     try {
       emit(AuthLoading());
-      final response = await _authRepository.login(
-        phone: event.phone,
-        password: event.password,
+      final response = await _authRepository.verifyCode(
+        email: event.email,
+        code: event.code,
       );
       emit(AuthAuthenticated(response.user));
     } catch (e) {
@@ -58,50 +55,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.register(
         email: event.email,
         phone: event.phone,
-        password: event.password,
         name: event.name,
         age: event.age,
         bio: event.bio,
         interests: event.interests,
       );
-      
-      if (event.email != null) {
-        emit(EmailVerificationRequired());
-      } else if (event.phone != null) {
-        emit(PhoneVerificationRequired());
-      } else {
-        emit(RegistrationSuccess(response.user));
-      }
+      emit(AuthAuthenticated(response.user));
     } catch (e) {
       emit(AuthError(e.toString()));
-    }
-  }
-
-  Future<void> _onVerifyEmail(
-    VerifyEmailEvent event,
-    Emitter<AuthState> emit,
-  ) async {
-    try {
-      emit(AuthLoading());
-      await _authRepository.verifyEmail(event.code);
-      final user = await _authRepository.getCurrentUser();
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(VerificationError(e.toString()));
-    }
-  }
-
-  Future<void> _onVerifyPhone(
-    VerifyPhoneEvent event,
-    Emitter<AuthState> emit,
-  ) async {
-    try {
-      emit(AuthLoading());
-      await _authRepository.verifyPhone(event.code);
-      final user = await _authRepository.getCurrentUser();
-      emit(AuthAuthenticated(user));
-    } catch (e) {
-      emit(VerificationError(e.toString()));
     }
   }
 
@@ -124,10 +85,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       emit(AuthLoading());
-      final isLoggedIn = await _authRepository.isLoggedIn();
-      
-      if (isLoggedIn) {
-        final user = await _authRepository.getCurrentUser();
+      final user = await _authRepository.getCurrentUser();
+      if (user != null) {
         emit(AuthAuthenticated(user));
       } else {
         emit(AuthUnauthenticated());
@@ -142,11 +101,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      // Get refresh token from storage
-      final response = await _authRepository.refreshToken('refresh_token');
-      emit(AuthAuthenticated(response.user));
+      emit(AuthLoading());
+      await _authRepository.refreshToken();
+      final user = await _authRepository.getCurrentUser();
+      if (user != null) {
+        emit(AuthAuthenticated(user));
+      } else {
+        emit(AuthUnauthenticated());
+      }
     } catch (e) {
-      emit(TokenRefreshError(e.toString()));
+      emit(AuthError(e.toString()));
     }
   }
 }

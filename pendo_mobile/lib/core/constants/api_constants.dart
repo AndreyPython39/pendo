@@ -1,14 +1,16 @@
 class ApiConstants {
   // Base URLs
-  static const baseUrl = 'https://api.pendo.africa';
+  static const baseUrl = 'https://api.pendo.app/v1';
   static const apiPrefix = '/api/v1';
   
   // Authentication
+  static const requestCode = '/auth/request-code';
+  static const verifyCode = '/auth/verify-code';
   static const login = '/auth/login';
   static const register = '/auth/register';
   static const verifyEmail = '/auth/verify-email';
   static const verifyPhone = '/auth/verify-phone';
-  static const refreshToken = '/auth/refresh-token';
+  static const refreshToken = '/auth/refresh';
   static const forgotPassword = '/auth/forgot-password';
   static const resetPassword = '/auth/reset-password';
   static const logout = '/auth/logout';
@@ -20,6 +22,10 @@ class ApiConstants {
   static const deletePhoto = '/profile/photos/{id}';
   static const updateLocation = '/profile/location';
   static const updatePreferences = '/profile/preferences';
+  static const currentUser = '/users/me';
+  static const updateFcmToken = '/users/fcm-token';
+  static const updateLastActive = '/users/last-active';
+  static const setActive = '/users/set-active';
   
   // Matching
   static const getProfiles = '/matching/profiles';
@@ -71,6 +77,8 @@ class ApiConstants {
   static const receivedGifts = '/gifts/received';
   static const sentGifts = '/gifts/sent';
   static String sendGift(int giftId, int receiverId) => '/gifts/$giftId/send/$receiverId';
+  static const giftsSent = '/gifts/sent';
+  static const giftsReceived = '/gifts/received';
   
   // Premium
   static const premium = '/premium';
@@ -87,11 +95,16 @@ class ApiConstants {
   
   // Headers
   static const authHeader = 'Authorization';
+  static const authorization = 'Authorization';
   static const bearerPrefix = 'Bearer ';
+  static const bearer = 'Bearer ';
   static const contentType = 'Content-Type';
   static const applicationJson = 'application/json';
   static const accept = 'Accept';
   static const acceptLanguage = 'Accept-Language';
+  static const cacheControl = 'Cache-Control';
+  static const noCache = 'no-cache';
+  static const maxAge = 'max-age=';
   
   // Error Codes
   static const unauthorized = 401;
@@ -103,8 +116,29 @@ class ApiConstants {
   static const connectionTimeout = Duration(seconds: 30);
   static const receiveTimeout = Duration(seconds: 30);
   
-  // Cache Control
-  static const cacheControl = 'Cache-Control';
-  static const noCache = 'no-cache';
-  static const maxAge = 'max-age=';
+  // New Endpoints
+  static const String newBaseUrl = 'https://api.pendo.app/v1';
+  static const String loginNew = '/auth/login';
+  static const String registerNew = '/auth/register';
+  static const String verifyEmailNew = '/auth/verify/email';
+  static const String verifyPhoneNew = '/auth/verify/phone';
+  static const String refreshTokenNew = '/auth/refresh';
+  static const String logoutNew = '/auth/logout';
+  static const String forgotPasswordNew = '/auth/forgot-password';
+  static const String resetPasswordNew = '/auth/reset-password';
+  
+  static const String streams = '/streams';
+  
+  static const String tribesNew = '/tribes';
+  static const String joinTribeNew = '/tribes/join';
+  static const String leaveTribeNew = '/tribes/leave';
+  
+  static const String chats = '/chats';
+  static const String messagesNew = '/messages';
+  
+  static const String stories = '/stories';
+  static const String viewStory = '/stories/view';
+  
+  static const String swipe = '/swipes';
+  static const String matchesNew = '/matches';
 }

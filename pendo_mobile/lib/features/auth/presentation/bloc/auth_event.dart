@@ -7,36 +7,33 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoginWithEmailEvent extends AuthEvent {
+class RequestCodeEvent extends AuthEvent {
   final String email;
-  final String password;
 
-  const LoginWithEmailEvent({
+  const RequestCodeEvent({
     required this.email,
-    required this.password,
   });
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email];
 }
 
-class LoginWithPhoneEvent extends AuthEvent {
-  final String phone;
-  final String password;
+class VerifyCodeEvent extends AuthEvent {
+  final String email;
+  final String code;
 
-  const LoginWithPhoneEvent({
-    required this.phone,
-    required this.password,
+  const VerifyCodeEvent({
+    required this.email,
+    required this.code,
   });
 
   @override
-  List<Object?> get props => [phone, password];
+  List<Object?> get props => [email, code];
 }
 
 class RegisterEvent extends AuthEvent {
   final String? email;
   final String? phone;
-  final String password;
   final String name;
   final int age;
   final String? bio;
@@ -45,7 +42,6 @@ class RegisterEvent extends AuthEvent {
   const RegisterEvent({
     this.email,
     this.phone,
-    required this.password,
     required this.name,
     required this.age,
     this.bio,
@@ -53,33 +49,7 @@ class RegisterEvent extends AuthEvent {
   });
 
   @override
-  List<Object?> get props => [
-        email,
-        phone,
-        password,
-        name,
-        age,
-        bio,
-        interests,
-      ];
-}
-
-class VerifyEmailEvent extends AuthEvent {
-  final String code;
-
-  const VerifyEmailEvent(this.code);
-
-  @override
-  List<Object?> get props => [code];
-}
-
-class VerifyPhoneEvent extends AuthEvent {
-  final String code;
-
-  const VerifyPhoneEvent(this.code);
-
-  @override
-  List<Object?> get props => [code];
+  List<Object?> get props => [email, phone, name, age, bio, interests];
 }
 
 class LogoutEvent extends AuthEvent {}

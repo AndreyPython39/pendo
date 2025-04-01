@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>You have a new match!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .match-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 75px;
+            margin: 0 auto 20px;
+            display: block;
+            object-fit: cover;
+            border: 3px solid #2196F3;
+        }
+        .match-name {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #2196F3;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .hearts {
+            text-align: center;
+            font-size: 32px;
+            color: #FF4081;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ app_logo_url }}" alt="{{ app_name }}" class="logo">
+            <h1>It's a Match! 🎉</h1>
+        </div>
+
+        <div class="hearts">❤️</div>
+
+        {% if match_photo %}
+        <img src="{{ match_photo }}" alt="{{ match_name }}" class="match-photo">
+        {% endif %}
+
+        <div class="match-name">
+            {{ match_name }}
+        </div>
+
+        <p style="text-align: center;">
+            You and {{ match_name }} have liked each other! Now it's time to break the ice and start a conversation.
+        </p>
+
+        <p style="text-align: center;">
+            <a href="{{ chat_url }}" class="button">Start Chatting</a>
+        </p>
+
+        <div class="footer">
+            <p>This email was sent by {{ app_name }}. If you have any questions, please contact our support team.</p>
+            <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

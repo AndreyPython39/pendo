@@ -20,6 +20,7 @@ class Story(Base):
     # Relationships
     user = relationship("User", back_populates="stories")
     views = relationship("StoryView", back_populates="story", cascade="all, delete-orphan")
+    reactions = relationship("StoryReaction", back_populates="story", cascade="all, delete-orphan")
 
     # Constraints
     __table_args__ = (
@@ -46,6 +47,30 @@ class StoryView(Base):
 
     def __repr__(self):
         return f"<StoryView(story_id={self.story_id}, viewer_id={self.viewer_id})>"
+
+class StoryReaction(Base):
+    __tablename__ = "story_reactions"
+
+    id = Column(Integer, primary_key=True)
+    story_id = Column(Integer, ForeignKey("stories.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    reaction_type = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default='now()', nullable=False)
+
+    # Relationships
+    story = relationship("Story", back_populates="reactions")
+    user = relationship("User", back_populates="story_reactions")
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint(
+            "reaction_type IN ('like', 'love', 'haha', 'wow', 'sad', 'angry')",
+            name='valid_story_reaction_type'
+        ),
+    )
+
+    def __repr__(self):
+        return f"<StoryReaction(story_id={self.story_id}, user_id={self.user_id}, type={self.reaction_type})>"
 
 class LiveStream(Base):
     __tablename__ = "live_streams"

@@ -4,6 +4,7 @@ class Routes {
   static const onboarding = '/onboarding';
   static const login = '/login';
   static const register = '/register';
+  static const createProfile = '/create-profile';
   static const verifyPhone = '/verify-phone';
   static const verifyEmail = '/verify-email';
   static const forgotPassword = '/forgot-password';

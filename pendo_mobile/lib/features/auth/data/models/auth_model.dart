@@ -5,16 +5,22 @@ part 'auth_model.g.dart';
 
 @JsonSerializable()
 class AuthResponseModel {
+  @JsonKey(name: 'access_token')
   final String accessToken;
+  
+  @JsonKey(name: 'refresh_token')
   final String refreshToken;
+  
+  @JsonKey(name: 'token_type')
+  final String tokenType;
+  
   final UserModel user;
-  final DateTime expiresAt;
 
-  const AuthResponseModel({
+  AuthResponseModel({
     required this.accessToken,
     required this.refreshToken,
+    required this.tokenType,
     required this.user,
-    required this.expiresAt,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>
@@ -29,7 +35,7 @@ class LoginRequestModel {
   final String? phone;
   final String password;
 
-  const LoginRequestModel({
+  LoginRequestModel({
     this.email,
     this.phone,
     required this.password,
@@ -51,7 +57,7 @@ class RegisterRequestModel {
   final String? bio;
   final List<String> interests;
 
-  const RegisterRequestModel({
+  RegisterRequestModel({
     this.email,
     this.phone,
     required this.password,
@@ -65,34 +71,4 @@ class RegisterRequestModel {
       _$RegisterRequestModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$RegisterRequestModelToJson(this);
-}
-
-@JsonSerializable()
-class VerificationRequestModel {
-  final String code;
-  final String type; // email or phone
-
-  const VerificationRequestModel({
-    required this.code,
-    required this.type,
-  });
-
-  factory VerificationRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$VerificationRequestModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$VerificationRequestModelToJson(this);
-}
-
-@JsonSerializable()
-class RefreshTokenRequestModel {
-  final String refreshToken;
-
-  const RefreshTokenRequestModel({
-    required this.refreshToken,
-  });
-
-  factory RefreshTokenRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$RefreshTokenRequestModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$RefreshTokenRequestModelToJson(this);
 }

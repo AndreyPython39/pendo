@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to {{ app_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .welcome-image {
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+        }
+        .features {
+            margin: 30px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .feature {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+        .feature:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #2196F3;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .social-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .social-link {
+            display: inline-block;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ app_logo_url }}" alt="{{ app_name }}" class="logo">
+            <h1>Welcome to {{ app_name }}, {{ user_name }}!</h1>
+        </div>
+
+        <img src="{{ welcome_image_url }}" alt="Welcome" class="welcome-image">
+
+        <p>We're excited to have you join our community! {{ app_name }} is the perfect place to connect with like-minded people and discover your tribe.</p>
+
+        <ul class="features">
+            <li class="feature">Create or join tribes based on your interests</li>
+            <li class="feature">Connect with people who share your passions</li>
+            <li class="feature">Share stories and experiences</li>
+            <li class="feature">Organize and participate in events</li>
+            <li class="feature">Chat with your matches and tribe members</li>
+        </ul>
+
+        <p style="text-align: center;">Ready to get started?</p>
+
+        <p style="text-align: center;">
+            <a href="{{ app_url }}" class="button">Complete Your Profile</a>
+        </p>
+
+        <div class="social-links">
+            <a href="{{ facebook_url }}" class="social-link">Facebook</a>
+            <a href="{{ instagram_url }}" class="social-link">Instagram</a>
+            <a href="{{ twitter_url }}" class="social-link">Twitter</a>
+        </div>
+
+        <div class="footer">
+            <p>Need help? Check out our <a href="{{ help_url }}">Help Center</a> or contact our support team.</p>
+            <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

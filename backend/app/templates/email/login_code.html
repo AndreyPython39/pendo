@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Login Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 5px;
+            color: #2196F3;
+            margin: 30px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            border: 2px dashed #2196F3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ app_logo_url }}" alt="{{ app_name }}" class="logo">
+            <h1>Your Login Code</h1>
+        </div>
+
+        <p>Here's your login code for {{ app_name }}:</p>
+
+        <div class="code">
+            {{ code }}
+        </div>
+
+        <p>This code will expire in 10 minutes. If you didn't request this code, please ignore this email.</p>
+
+        <p><strong>Never share this code with anyone.</strong> {{ app_name }} will never ask for your code via email, phone, or message.</p>
+
+        <div class="footer">
+            <p>This email was sent by {{ app_name }}. If you have any questions, please contact our support team.</p>
+            <p>&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

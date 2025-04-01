@@ -47,6 +47,7 @@ class User(Base):
     gifts_sent = relationship("Gift", foreign_keys="[Gift.from_id]", back_populates="sender")
     gifts_received = relationship("Gift", foreign_keys="[Gift.to_id]", back_populates="receiver")
     stories = relationship("Story", back_populates="user")
+    story_reactions = relationship("StoryReaction", back_populates="user")
     interests = relationship("Interest", secondary="user_interests", back_populates="users")
     tribes = relationship("Tribe", secondary="tribe_members", back_populates="members")
 

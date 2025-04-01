@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pendo_mobile/features/shared/models/location_model.dart';
 
 part 'tribe.freezed.dart';
 part 'tribe.g.dart';
